@@ -46,14 +46,6 @@ TaskOrbit/
 Follow these steps to set up and run TaskOrbit locally:
 
 ```bash
-# 📌 Prerequisites
-# Ensure you have the following installed:
-# - Python 3.8+
-# - Node.js and npm (for Vue.js frontend)
-# - Redis (for Celery task queue)
-```
-
-```bash
 # 🔧 Installation
 # Step 1: Clone the repository
 git clone <repository-url>
