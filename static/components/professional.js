@@ -75,7 +75,10 @@ export default {
                 });
                 const result = await response.json();
                 if (response.ok) {
-                    request.service_status = status;
+                    const originalRequest = this.serviceRequests.find(r => r.id === request.id);
+                    if(originalRequest) {
+                       originalRequest.service_status = status;
+                    }
                     this.message = `Service request ${status} successfully!`;
                 } else {
                     this.message = result.message || `Failed to update status to ${status}.`;
@@ -117,81 +120,97 @@ export default {
         this.fetchReviews();
     },
     template: `
-    <div style="min-height: 100vh; background: linear-gradient(135deg, #1A2A44 0%, #2A3B5A 100%); padding: 2rem; font-family: 'Inter', sans-serif; color: #A0AEC0;">
-        <div style="max-width: 1000px; margin: 0 auto;">
-            <div v-if="message" style="background: rgba(255, 191, 0, 0.1); color: #FFB700; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem;">{{ message }}</div>
-            <div v-else style="text-align: center;">
-                <h2 style="font-family: 'Poppins', sans-serif; font-size: 2rem; font-weight: 600; color: #F4A261; margin-bottom: 1.5rem;">Hey, {{ username }}!</h2>
-                <!-- All Service Requests -->
-                <h3 style="font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; color: #F4A261; margin-bottom: 1.5rem;">All Service Requests</h3>
-                <div style="overflow-x: auto; margin-bottom: 2rem;">
-                    <table style="width: 100%; border-collapse: collapse; background: rgba(255, 255, 255, 0.1); border-radius: 8px;">
-                        <thead>
-                            <tr style="background: #2A3B5A; color: #FFFFFF;">
-                                <th style="padding: 1rem; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-align: left;">User Email</th>
-                                <th style="padding: 1rem; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-align: left;">Status</th>
-                                <th style="padding: 1rem; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-align: left;">Date Registered</th>
-                                <th style="padding: 1rem; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-align: left;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="request in serviceRequests" :key="request.id" style="border-bottom: 1px solid #2A3B5A;">
-                                <td style="padding: 1rem; font-size: 0.9rem; color: #A0AEC0;">{{ request.user_email }}</td>
-                                <td style="padding: 1rem; font-size: 0.9rem; color: #A0AEC0;">{{ request.service_status }}</td>
-                                <td style="padding: 1rem; font-size: 0.9rem; color: #A0AEC0;">{{ request.date_of_register }}</td>
-                                <td style="padding: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                    <button v-if="request.service_status === 'requested' || request.service_status === 'pending'" 
-                                            @click="updateServiceStatus(request, 'accepted')" 
-                                            style="padding: 0.5rem 1rem; border-radius: 8px; background: #4FD1C5; color: #1A2A44; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 500; border: none; cursor: pointer; transition: background 0.3s ease;">Accept</button>
-                                    <button v-if="request.service_status === 'requested' || request.service_status === 'pending'" 
-                                            @click="updateServiceStatus(request, 'rejected')" 
-                                            style="padding: 0.5rem 1rem; border-radius: 8px; background: #FF6B6B; color: #FFFFFF; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 500; border: none; cursor: pointer; transition: background 0.3s ease;">Reject</button>
-                                    <button v-if="request.service_status === 'rejected'" 
-                                            disabled 
-                                            style="padding: 0.5rem 1rem; border-radius: 8px; background: #2A3B5A; color: #A0AEC0; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 500; border: none; opacity: 0.6;">Rejected</button>
-                                    <button v-if="request.service_status === 'accepted'" 
-                                            @click="updateServiceStatus(request, 'completed')" 
-                                            style="padding: 0.5rem 1rem; border-radius: 8px; background: #F4A261; color: #1A2A44; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 500; border: none; cursor: pointer; transition: background 0.3s ease;">Complete</button>
-                                    <button v-if="request.service_status === 'completed'" 
-                                            disabled 
-                                            style="padding: 0.5rem 1rem; border-radius: 8px; background: #2A3B5A; color: #A0AEC0; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 500; border: none; opacity: 0.6;">Completed</button>
-                                </td>
-                            </tr>
-                            <tr v-if="serviceRequests.length === 0">
-                                <td colspan="4" style="padding: 1rem; font-size: 0.9rem; color: #A0AEC0; text-align: center;">No service requests available.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <!-- All Reviews -->
-                <h3 style="font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; color: #F4A261; margin-bottom: 1.5rem;">All Reviews</h3>
-                <div v-if="reviewMessage" style="background: rgba(255, 191, 0, 0.1); color: #FFB700; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem;">{{ reviewMessage }}</div>
-                <div v-else style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; background: rgba(255, 255, 255, 0.1); border-radius: 8px;">
-                        <thead>
-                            <tr style="background: #2A3B5A; color: #FFFFFF;">
-                                <th style="padding: 1rem; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-align: left;">Customer Name</th>
-                                <th style="padding: 1rem; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-align: left;">Service Name</th>
-                                <th style="padding: 1rem; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-align: left;">Rating</th>
-                                <th style="padding: 1rem; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-align: left;">Review Description</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="review in reviews" :key="review.id" style="border-bottom: 1px solid #2A3B5A;">
-                                <td style="padding: 1rem; font-size: 0.9rem; color: #A0AEC0;">{{ review.customer_name }}</td>
-                                <td style="padding: 1rem; font-size: 0.9rem; color: #A0AEC0;">{{ review.service_name }}</td>
-                                <td style="padding: 1rem; font-size: 0.9rem; color: #A0AEC0;">{{ review.rating }}</td>
-                                <td style="padding: 1rem; font-size: 0.9rem; color: #A0AEC0;">{{ review.review_description }}</td>
-                            </tr>
-                            <tr v-if="reviews.length === 0">
-                                <td colspan="4" style="padding: 1rem; font-size: 0.9rem; color: #A0AEC0; text-align: center;">No reviews available.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+    <div style="min-height: 100vh; background: linear-gradient(135deg, #f8f9fc 0%, #e8ecf5 100%); padding: 2rem; font-family: 'Inter', sans-serif; color: #2D3748;">
+        <div style="
+          max-width: 1200px; 
+          margin: 0 auto; 
+          padding: 2.5rem; 
+          background: rgba(255, 255, 255, 0.6); 
+          backdrop-filter: blur(12px); 
+          border-radius: 18px; 
+          box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        ">
+            <h2 style="
+              font-family: 'Poppins', sans-serif; 
+              font-size: 2.5rem; 
+              font-weight: 700; 
+              text-align: center; 
+              margin-bottom: 2.5rem;
+              background: linear-gradient(90deg, #FF7E5F, #F4A261); 
+              -webkit-background-clip: text; 
+              -webkit-text-fill-color: transparent; 
+            ">
+              Hey, {{ username }}!
+            </h2>
+
+            <div v-if="message" style="background-color: #FFF5F5; color: #C53030; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 2rem; border: 1px solid #FC8181;">
+              {{ message }}
             </div>
-            <!-- Footer Credit -->
-            <p style="font-size: 0.8rem; color: #A0AEC0; text-align: center; margin-top: 3rem;">Created by Thakur Harsh Pratap Singh</p>
+
+            <!-- All Service Requests -->
+            <h3 style="font-family: 'Poppins', sans-serif; font-size: 1.8rem; font-weight: 600; color: #2D3748; margin-bottom: 1.5rem; border-bottom: 2px solid #F4A261; padding-bottom: 0.5rem;">
+              Service Requests
+            </h3>
+            <div style="overflow-x: auto; margin-bottom: 3rem; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f7fafc; color: #4A5568;">
+                            <th style="padding: 1rem 1.5rem; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-align: left; font-weight: 600;">User Email</th>
+                            <th style="padding: 1rem 1.5rem; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-align: left; font-weight: 600;">Status</th>
+                            <th style="padding: 1rem 1.5rem; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-align: left; font-weight: 600;">Date Registered</th>
+                            <th style="padding: 1rem 1.5rem; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-align: left; font-weight: 600;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="request in serviceRequests" :key="request.id" style="border-bottom: 1px solid #e2e8f0;">
+                            <td style="padding: 1rem 1.5rem; font-size: 0.9rem; color: #4A5568;">{{ request.user_email }}</td>
+                            <td style="padding: 1rem 1.5rem; font-size: 0.9rem; color: #4A5568; text-transform: capitalize;">{{ request.service_status }}</td>
+                            <td style="padding: 1rem 1.5rem; font-size: 0.9rem; color: #4A5568;">{{ new Date(request.date_of_register).toLocaleDateString() }}</td>
+                            <td style="padding: 1rem 1.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <button v-if="request.service_status === 'requested' || request.service_status === 'pending'" @click="updateServiceStatus(request, 'accepted')" style="padding: 0.5rem 1rem; border-radius: 8px; background: #38B2AC; color: #fff; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s ease;">Accept</button>
+                                <button v-if="request.service_status === 'requested' || request.service_status === 'pending'" @click="updateServiceStatus(request, 'rejected')" style="padding: 0.5rem 1rem; border-radius: 8px; background: #E53E3E; color: #fff; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s ease;">Reject</button>
+                                <button v-if="request.service_status === 'accepted'" @click="updateServiceStatus(request, 'completed')" style="padding: 0.5rem 1rem; border-radius: 8px; background: linear-gradient(135deg, #F4A261, #FFB677); color: #fff; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s ease;">Complete</button>
+                                <span v-if="request.service_status === 'rejected' || request.service_status === 'completed'" style="padding: 0.5rem 1rem; border-radius: 8px; background: #E2E8F0; color: #718096; font-size: 0.9rem; font-weight: 500; text-transform: capitalize;">{{ request.service_status }}</span>
+                            </td>
+                        </tr>
+                        <tr v-if="serviceRequests.length === 0">
+                            <td colspan="4" style="padding: 2rem; font-size: 1rem; color: #718096; text-align: center;">No service requests available.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- All Reviews -->
+            <h3 style="font-family: 'Poppins', sans-serif; font-size: 1.8rem; font-weight: 600; color: #2D3748; margin-bottom: 1.5rem; border-bottom: 2px solid #F4A261; padding-bottom: 0.5rem;">
+              Reviews
+            </h3>
+             <div v-if="reviewMessage" style="background-color: #f0f4ff; color: #4A5568; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem; border: 1px solid #a3bffa;">
+               {{ reviewMessage }}
+             </div>
+            <div v-else style="overflow-x: auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f7fafc; color: #4A5568;">
+                            <th style="padding: 1rem 1.5rem; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-align: left; font-weight: 600;">Customer</th>
+                            <th style="padding: 1rem 1.5rem; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-align: left; font-weight: 600;">Service</th>
+                            <th style="padding: 1rem 1.5rem; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-align: left; font-weight: 600;">Rating</th>
+                            <th style="padding: 1rem 1.5rem; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-align: left; font-weight: 600;">Review</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="review in reviews" :key="review.id" style="border-bottom: 1px solid #e2e8f0;">
+                            <td style="padding: 1rem 1.5rem; font-size: 0.9rem; color: #4A5568;">{{ review.customer_name }}</td>
+                            <td style="padding: 1rem 1.5rem; font-size: 0.9rem; color: #4A5568;">{{ review.service_name }}</td>
+                            <td style="padding: 1rem 1.5rem; font-size: 0.9rem; color: #4A5568;">{{ review.rating }} / 5</td>
+                            <td style="padding: 1rem 1.5rem; font-size: 0.9rem; color: #4A5568;">{{ review.review_description }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <p style="font-size: 0.8rem; color: #718096; text-align: center; margin-top: 3rem;">
+              Created by Thakur Harsh Pratap Singh
+            </p>
         </div>
     </div>
     `

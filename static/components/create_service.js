@@ -6,7 +6,8 @@ export default {
                 base_price: '',
                 description: ''
             },
-            message: ''
+            message: '',
+            isSuccess: false
         };
     },
     methods: {
@@ -14,6 +15,7 @@ export default {
             const token = localStorage.getItem("auth_token");
             if (!token) {
                 this.message = "Unauthorized! Please log in.";
+                this.isSuccess = false;
                 return;
             }
             try {
@@ -27,14 +29,18 @@ export default {
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    this.message = "Service created successfully!";
+                    this.message = "Service created successfully! Redirecting...";
+                    this.isSuccess = true;
                     this.resetForm();
+                    setTimeout(() => this.$router.push('/admin'), 2000);
                 } else {
                     this.message = data.message || "Failed to create service.";
+                    this.isSuccess = false;
                 }
             } catch (error) {
                 console.error("Error creating service:", error);
-                this.message = "Error creating service.";
+                this.message = "An error occurred while creating the service.";
+                this.isSuccess = false;
             }
         },
         resetForm() {
@@ -44,29 +50,75 @@ export default {
         }
     },
     template: `
-        <div style="min-height: 100vh; background: linear-gradient(135deg, #1A2A44 0%, #2A3B5A 100%); display: flex; justify-content: center; align-items: center; padding: 2rem; font-family: 'Inter', sans-serif;">
-            <div style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); padding: 2.5rem; border-radius: 12px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); max-width: 500px; width: 100%; border: 1px solid rgba(255, 255, 255, 0.2);">
-                <h2 style="font-family: 'Poppins', sans-serif; font-size: 2rem; font-weight: 600; color: #F4A261; text-align: center; margin-bottom: 1.5rem;">Create New Service</h2>
-                <div v-if="message" style="background: rgba(255, 191, 0, 0.1); color: #FFB700; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem;">{{ message }}</div>
+        <div style="min-height: 100vh; background: linear-gradient(135deg, #f8f9fc 0%, #e8ecf5 100%); display: flex; justify-content: center; align-items: center; padding: 2rem; font-family: 'Inter', sans-serif;">
+            <div style="
+              max-width: 500px; 
+              width: 100%;
+              padding: 2.5rem; 
+              background: rgba(255, 255, 255, 0.6); 
+              backdrop-filter: blur(12px); 
+              border-radius: 18px; 
+              box-shadow: 0 8px 25px rgba(0,0,0,0.1); 
+              border: 1px solid rgba(255, 255, 255, 0.8);
+            ">
+                <h2 style="
+                  font-family: 'Poppins', sans-serif; 
+                  font-size: 2.5rem; 
+                  font-weight: 700; 
+                  text-align: center; 
+                  margin-bottom: 2rem;
+                  background: linear-gradient(90deg, #FF7E5F, #F4A261); 
+                  -webkit-background-clip: text; 
+                  -webkit-text-fill-color: transparent; 
+                ">
+                  Create New Service
+                </h2>
+                
+                <div v-if="message" :style="{ 
+                  backgroundColor: isSuccess ? '#F0FFF4' : '#FFF5F5', 
+                  color: isSuccess ? '#2F855A' : '#C53030', 
+                  border: isSuccess ? '1px solid #68D391' : '1px solid #FC8181',
+                  padding: '1rem', 
+                  borderRadius: '8px', 
+                  textAlign: 'center', 
+                  marginBottom: '1.5rem',
+                  fontWeight: '500'
+                }">
+                  {{ message }}
+                </div>
+
                 <form @submit.prevent="submitService">
                     <div style="margin-bottom: 1.5rem;">
-                        <label for="name" style="font-size: 0.9rem; color: #A0AEC0; display: block; margin-bottom: 0.5rem;">Service Name</label>
-                        <input type="text" v-model="service.name" id="name" required style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #A0AEC0; background: rgba(255, 255, 255, 0.05); color: #FFFFFF; font-family: 'Inter', sans-serif; font-size: 1rem; outline: none; transition: border-color 0.3s ease;">
+                        <label for="name" style="font-size: 0.9rem; font-weight: 500; color: #4A5568; display: block; margin-bottom: 0.5rem;">Service Name</label>
+                        <input type="text" v-model="service.name" id="name" required 
+                          style="width: 100%; padding: 0.85rem 1rem; border-radius: 10px; border: 1px solid #CBD5E0; background: #fff; color: #2D3748; font-size: 1rem; outline: none; transition: all 0.3s ease;"
+                          onfocus="this.style.borderColor='#F4A261'; this.style.boxShadow='0 0 0 3px rgba(244,162,97,0.2)';"
+                          onblur="this.style.borderColor='#CBD5E0'; this.style.boxShadow='none';">
                     </div>
                     <div style="margin-bottom: 1.5rem;">
-                        <label for="base_price" style="font-size: 0.9rem; color: #A0AEC0; display: block; margin-bottom: 0.5rem;">Base Price</label>
-                        <input type="number" v-model="service.base_price" id="base_price" required style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #A0AEC0; background: rgba(255, 255, 255, 0.05); color: #FFFFFF; font-family: 'Inter', sans-serif; font-size: 1rem; outline: none; transition: border-color 0.3s ease;">
+                        <label for="base_price" style="font-size: 0.9rem; font-weight: 500; color: #4A5568; display: block; margin-bottom: 0.5rem;">Base Price (₹)</label>
+                        <input type="number" v-model="service.base_price" id="base_price" required 
+                          style="width: 100%; padding: 0.85rem 1rem; border-radius: 10px; border: 1px solid #CBD5E0; background: #fff; color: #2D3748; font-size: 1rem; outline: none; transition: all 0.3s ease;"
+                          onfocus="this.style.borderColor='#F4A261'; this.style.boxShadow='0 0 0 3px rgba(244,162,97,0.2)';"
+                          onblur="this.style.borderColor='#CBD5E0'; this.style.boxShadow='none';">
                     </div>
                     <div style="margin-bottom: 2rem;">
-                        <label for="description" style="font-size: 0.9rem; color: #A0AEC0; display: block; margin-bottom: 0.5rem;">Description</label>
-                        <textarea v-model="service.description" id="description" required style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #A0AEC0; background: rgba(255, 255, 255, 0.05); color: #FFFFFF; font-family: 'Inter', sans-serif; font-size: 1rem; outline: none; transition: border-color 0.3s ease; min-height: 120px; resize: vertical;"></textarea>
+                        <label for="description" style="font-size: 0.9rem; font-weight: 500; color: #4A5568; display: block; margin-bottom: 0.5rem;">Description</label>
+                        <textarea v-model="service.description" id="description" required 
+                          style="width: 100%; padding: 0.85rem 1rem; border-radius: 10px; border: 1px solid #CBD5E0; background: #fff; color: #2D3748; font-size: 1rem; outline: none; transition: all 0.3s ease; min-height: 120px; resize: vertical;"></textarea>
                     </div>
-                    <div style="display: flex; gap: 1rem; justify-content: center;">
-                        <button type="submit" style="flex: 1; padding: 0.75rem; border-radius: 8px; background: #F4A261; color: #1A2A44; font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 500; border: none; cursor: pointer; transition: background 0.3s ease;">Create Service</button>
-                        <router-link to="/admin" style="flex: 1; padding: 0.75rem; border-radius: 8px; background: #2A3B5A; color: #A0AEC0; font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 500; text-align: center; text-decoration: none; transition: background 0.3s ease;">Cancel</router-link>
+                    <div style="display: flex; gap: 1rem;">
+                        <button type="submit" 
+                          style="flex: 2; padding: 0.9rem; border-radius: 12px; background: linear-gradient(135deg, #F4A261, #FFB677); color: #fff; font-size: 1.1rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 6px 20px rgba(244,162,97,0.4);">
+                          Create Service
+                        </button>
+                        <router-link to="/admin" 
+                          style="flex: 1; padding: 0.9rem; border-radius: 12px; background: #EDF2F7; color: #4A5568; font-size: 1.1rem; font-weight: 600; text-align: center; text-decoration: none; transition: background 0.3s ease;">
+                          Cancel
+                        </router-link>
                     </div>
                 </form>
-                <p style="font-size: 0.8rem; color: #A0AEC0; text-align: center; margin-top: 1.5rem;">Created by Thakur Harsh Pratap Singh</p>
+                <p style="font-size: 0.8rem; color: #718096; text-align: center; margin-top: 2rem;">Created by Thakur Harsh Pratap Singh</p>
             </div>
         </div>
     `
